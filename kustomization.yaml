@@ -4,7 +4,7 @@
 #   10-ecommerce-data  PostgreSQL, Valkey, Kafka                 (wave 1)
 #   20-logging         OpenSearch, OpenSearch Dashboards         (wave 2)
 #   30-observability   Collector, OpAMP, Jaeger, Prometheus, Grafana (wave 3)
-#   40-ecommerce-app   flagd, flagd-ui and the 17 shop services  (wave 4)
+#   40-ecommerce-app   flagd, flagd-ui, 17 shop services, AI assistant (wave 4)
 #
 # 50-ingress is deliberately NOT listed: apply it by hand once DNS resolves
 # (see 50-ingress/kustomization.yaml). Secrets come from create-secrets.sh.
@@ -25,7 +25,11 @@ images:
     newTag: "9"
   - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/ad
     newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/agent
+    newTag: "9"
   - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/cart
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/chatbot
     newTag: "9"
   - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/checkout
     newTag: "9"
@@ -46,6 +50,8 @@ images:
   - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/kafka
     newTag: "9"
   - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/load-generator
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/mcp
     newTag: "9"
   - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/opamp-server
     newTag: "9"

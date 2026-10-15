@@ -12,7 +12,7 @@ Argo CD with Kustomize.
 | `10-ecommerce-data/` | `ecommerce-data` | PostgreSQL, Valkey, Kafka (StatefulSets on gp3) | 1 |
 | `20-logging/` | `logging` | OpenSearch, OpenSearch Dashboards | 2 |
 | `30-observability/` | `observability` | OTel Collector, OpAMP, Jaeger, Prometheus, Grafana | 3 |
-| `40-ecommerce-app/` | `ecommerce-app` | flagd, flagd-ui, 17 shop services | 4 |
+| `40-ecommerce-app/` | `ecommerce-app` | flagd, flagd-ui, 17 shop services, AI assistant (chatbot, agent, mcp) | 4 |
 | `50-ingress/` | per service | 5 HTTPS Ingresses - **applied by hand after DNS** | — |
 | `argocd/` | `argocd` | The Argo CD `Application` | — |
 | `create-secrets.sh` | all | Creates every Secret (never stored in Git) | — |
@@ -21,7 +21,7 @@ Argo CD with Kustomize.
 
 | URL | Service | Login |
 |---|---|---|
-| https://shop.digitalwitch.online | Shop (flags at `/feature`, Locust at `/loadgen/`) | public |
+| https://shop.digitalwitch.online | Shop (flags at `/feature`, Locust at `/loadgen/`, AI chat at `/chatbot/`) | public |
 | https://grafana.digitalwitch.online | Grafana | Grafana admin (`grafana-admin` Secret) |
 | https://jaeger.digitalwitch.online | Jaeger | basic auth |
 | https://prometheus.digitalwitch.online | Prometheus | basic auth |
@@ -29,7 +29,7 @@ Argo CD with Kustomize.
 
 ## Prerequisites (EKS Terraform project)
 
-1. Nodes big enough: about 5.5 GiB memory requested, 9.4 GiB limits -> 3 x `t3.large`.
+1. Nodes big enough: about 6.4 GiB memory requested, 10.9 GiB limits -> 3 x `t3.large`.
 2. `aws-ebs-csi-driver` add-on (for the `gp3` StorageClass).
 3. Already there: NGINX ingress, cert-manager + `letsencrypt-prod`, Argo CD, EFS (`efs-sc`).
 4. Images in ECR: run the "Build and Push Images to ECR" workflow.
@@ -71,6 +71,7 @@ when the originals change:
 | `30-observability/config/jaeger-ui-config.json` | `ecommerce-final-project/src/jaeger/ui-config.json` |
 | `40-ecommerce-app/config/otel-config.yml` | `ecommerce-final-project/otel-config.yml` |
 | `40-ecommerce-app/config/demo.flagd.json` | `ecommerce-final-project/src/flagd/demo.flagd.json` |
+| `40-ecommerce-app/config/vcr_cassettes/*` | `ecommerce-final-project/src/agent/fixtures/vcr_cassettes/*` |
 
 Adapted (not plain copies): `otelcol-config.yml`, `jaeger-config.yml`,
 `grafana.ini`, `datasources.yaml`, `app.env`.

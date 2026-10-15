@@ -1,0 +1,110 @@
+# AI assistant - agent (Python): answers shoppers' questions using an LLM and
+# the shop's tools (product catalog, cart...).
+# By default it REPLAYS recorded LLM answers (USE_VCR=True), so no AI API key
+# is needed. For a real LLM: set USE_VCR=False, LLM_BASE_URL and LLM_MODEL, and
+# add key LLM_API_KEY to Secret app-secrets.
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent
+  namespace: ecommerce-app
+  labels:
+    app: agent
+spec:
+  selector:
+    app: agent
+  ports:
+    - name: http
+      port: 8010
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent
+  namespace: ecommerce-app
+  labels:
+    app: agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent
+  template:
+    metadata:
+      labels:
+        app: agent
+    spec:
+      enableServiceLinks: false
+      initContainers:
+        # Recorded answers come from a read-only ConfigMap; copy them to a
+        # writable folder because the agent may add new recordings
+        - name: copy-recordings
+          image: busybox:1.37
+          command: ["sh", "-c", "cp /recordings/*.yaml /cassettes/"]
+          volumeMounts:
+            - name: recordings
+              mountPath: /recordings
+              readOnly: true
+            - name: cassettes
+              mountPath: /cassettes
+      containers:
+        - name: agent
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/agent:latest
+          ports:
+            - name: http
+              containerPort: 8010
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: agent
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=low"
+            - name: OTEL_EXPORTER_OTLP_INSECURE
+              value: "true"
+            - name: OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+              value: "true"
+            - name: USE_VCR
+              value: "True"
+            - name: VCR_MATCH_THRESHOLD
+              value: "0.85"
+            # Picks the recording file: azure/gpt-5.5 -> azure_gpt-5.5_cassette.yaml
+            - name: LLM_MODEL
+              value: azure/gpt-5.5
+            - name: LLM_BASE_URL
+              value: https://local-llm.com
+            - name: LLM_TLS_VERIFY
+              value: "True"
+            - name: MCP_ENABLED
+              value: "False"
+            - name: GRAPH_RECURSION_LIMIT
+              value: "25"
+            # Only needed for a real LLM; optional, so the pod starts without it
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef: { name: app-secrets, key: LLM_API_KEY, optional: true }
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef: { name: app-secrets, key: LLM_API_KEY, optional: true }
+          resources:
+            requests: { cpu: 50m, memory: 300Mi }
+            limits: { memory: 500Mi }
+          readinessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          volumeMounts:
+            - name: cassettes
+              mountPath: /app/fixtures/vcr_cassettes
+      volumes:
+        - name: recordings
+          configMap:
+            name: agent-vcr-cassettes
+        - name: cassettes
+          emptyDir: {}

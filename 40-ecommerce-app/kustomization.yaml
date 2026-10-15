@@ -26,6 +26,10 @@ resources:
   - frontend-proxy.yaml
   - telemetry-docs.yaml
   - load-generator.yaml
+  # AI assistant
+  - chatbot.yaml
+  - agent.yaml
+  - mcp.yaml
 
 configMapGenerator:
   # Shared ports/addresses for every pod (envFrom)
@@ -40,6 +44,12 @@ configMapGenerator:
   - name: flagd-default-flags
     files:
       - config/demo.flagd.json
+  # Copies of ecommerce-final-project src/agent/fixtures/vcr_cassettes:
+  # recorded LLM answers the agent replays (no AI API key needed)
+  - name: agent-vcr-cassettes
+    files:
+      - config/vcr_cassettes/azure_gpt-5.5_cassette.yaml
+      - config/vcr_cassettes/claude-opus-4-7_cassette.yaml
 
 # Secret "app-secrets" is NOT stored in Git - create it with
 # create-secrets.sh. Keys: PRODUCT_CATALOG_DB_CONNECTION_STRING,
