@@ -1,0 +1,90 @@
+# OpenSearch - log store. The collector writes logs to index otel-logs-*.
+# Security plugin is disabled (as in the demo), so this Service must NEVER be
+# exposed outside the cluster. Use OpenSearch Dashboards or Grafana instead.
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensearch
+  namespace: logging
+  labels:
+    app: opensearch
+spec:
+  selector:
+    app: opensearch
+  ports:
+    - name: http
+      port: 9200
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: opensearch
+  namespace: logging
+  labels:
+    app: opensearch
+spec:
+  serviceName: opensearch
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opensearch
+  template:
+    metadata:
+      labels:
+        app: opensearch
+    spec:
+      enableServiceLinks: false
+      securityContext:
+        fsGroup: 1000 # opensearch user
+      containers:
+        - name: opensearch
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/opensearch:latest
+          ports:
+            - name: http
+              containerPort: 9200
+          env:
+            - name: cluster.name
+              value: demo-cluster
+            - name: node.name
+              value: demo-node
+            - name: discovery.type
+              value: single-node
+            # memlock ulimits can't be raised in a pod; single-node mode skips
+            # the bootstrap checks, so leave memory locking off
+            - name: bootstrap.memory_lock
+              value: "false"
+            - name: OPENSEARCH_JAVA_OPTS
+              value: -Xms400m -Xmx400m
+            - name: DISABLE_INSTALL_DEMO_CONFIG
+              value: "true"
+            - name: DISABLE_SECURITY_PLUGIN
+              value: "true"
+          resources:
+            requests: { cpu: 200m, memory: 768Mi }
+            limits: { memory: 1Gi }
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -s http://localhost:9200/_cluster/health | grep -E '"status":"(green|yellow)"'
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 90
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: /usr/share/opensearch/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: gp3
+        resources:
+          requests:
+            storage: 10Gi

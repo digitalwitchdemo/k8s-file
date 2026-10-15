@@ -1,0 +1,15 @@
+# EBS gp3 block storage for the databases (PostgreSQL, Valkey, Kafka,
+# OpenSearch, Prometheus, Grafana).
+# Requires the aws-ebs-csi-driver EKS add-on (added in the EKS Terraform project).
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  encrypted: "true"
+reclaimPolicy: Delete
+# Create the volume in the same availability zone as the pod that uses it
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true

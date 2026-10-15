@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ecommerce-data
+
+# Databases start before everything that depends on them
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "1"
+
+resources:
+  - postgresql.yaml
+  - valkey-cart.yaml
+  - kafka.yaml
+
+configMapGenerator:
+  # Mounted at /docker-entrypoint-initdb.d; runs only on an empty database.
+  # 01-init.sql is a copy of src/postgresql/init.sql.
+  - name: postgres-init
+    files:
+      - config/01-init.sql
+      - config/02-set-passwords.sh
+
+# Secret "postgres-secrets" is NOT stored in Git - create it with
+# create-secrets.sh before the first sync.

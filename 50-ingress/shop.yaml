@@ -1,0 +1,30 @@
+# https://shop.digitalwitch.online -> frontend-proxy (Envoy)
+# Envoy then routes /, /feature (flag UI), /loadgen/ (Locust), /images/,
+# /otlp-http/ (browser telemetry) to the right service.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shop
+  namespace: ecommerce-app
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # F5 NGINX rejects a second Ingress for the same host, so cert-manager
+    # adds the ACME challenge path to this Ingress instead of creating its own
+    acme.cert-manager.io/http01-edit-in-place: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - shop.digitalwitch.online
+      secretName: shop-tls
+  rules:
+    - host: shop.digitalwitch.online
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-proxy
+                port:
+                  name: http

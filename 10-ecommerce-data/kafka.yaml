@@ -1,0 +1,96 @@
+# Kafka (single node, KRaft) - "orders" events from checkout to
+# accounting and fraud-detection
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: ecommerce-data
+  labels:
+    app: kafka
+spec:
+  clusterIP: None # headless: stable DNS for the StatefulSet pod
+  selector:
+    app: kafka
+  ports:
+    - name: plaintext
+      port: 9092
+      targetPort: plaintext
+    - name: controller
+      port: 9093
+      targetPort: controller
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  namespace: ecommerce-data
+  labels:
+    app: kafka
+spec:
+  serviceName: kafka
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      # Kubernetes would otherwise inject KAFKA_PORT=tcp://..., which the
+      # apache/kafka image turns into an invalid broker setting
+      enableServiceLinks: false
+      securityContext:
+        fsGroup: 1000 # appuser
+      containers:
+        - name: kafka
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/kafka:latest
+          ports:
+            - name: plaintext
+              containerPort: 9092
+            - name: controller
+              containerPort: 9093
+          env:
+            - name: KAFKA_LISTENERS
+              value: PLAINTEXT://:9092,CONTROLLER://:9093
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: PLAINTEXT://kafka.ecommerce-data.svc.cluster.local:9092
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: 1@localhost:9093
+            - name: KAFKA_LOG_DIRS
+              value: /var/lib/kafka/data/logs
+            - name: KAFKA_HEAP_OPTS
+              value: -Xmx400m -Xms400m
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability:4318
+            - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+              value: cumulative
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=low
+            - name: OTEL_SERVICE_NAME
+              value: kafka
+            - name: OTEL_EXPERIMENTAL_SDK_TELEMETRY_VERSION
+              value: latest
+          resources:
+            requests: { cpu: 100m, memory: 512Mi }
+            limits: { memory: 640Mi }
+          readinessProbe:
+            tcpSocket: { port: plaintext }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: plaintext }
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/kafka/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: gp3
+        resources:
+          requests:
+            storage: 5Gi

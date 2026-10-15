@@ -1,0 +1,59 @@
+# Image provider (nginx) - product images
+apiVersion: v1
+kind: Service
+metadata:
+  name: image-provider
+  namespace: ecommerce-app
+  labels:
+    app: image-provider
+spec:
+  selector:
+    app: image-provider
+  ports:
+    - name: http
+      port: 8081
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-provider
+  namespace: ecommerce-app
+  labels:
+    app: image-provider
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: image-provider
+  template:
+    metadata:
+      labels:
+        app: image-provider
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: image-provider
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/image-provider:latest
+          ports:
+            - name: http
+              containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: image-provider
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=low"
+          resources:
+            requests: { cpu: 20m, memory: 72Mi }
+            limits: { memory: 120Mi }
+          readinessProbe:
+            httpGet: { path: /status, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 20

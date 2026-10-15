@@ -1,0 +1,65 @@
+# Recommendation service (Python)
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendation
+  namespace: ecommerce-app
+  labels:
+    app: recommendation
+spec:
+  selector:
+    app: recommendation
+  ports:
+    - name: grpc
+      port: 9001
+      targetPort: grpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation
+  namespace: ecommerce-app
+  labels:
+    app: recommendation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendation
+  template:
+    metadata:
+      labels:
+        app: recommendation
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: recommendation
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/recommendation:latest
+          ports:
+            - name: grpc
+              containerPort: 9001
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: recommendation
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=medium"
+            - name: OTEL_PYTHON_LOG_CORRELATION
+              value: "true"
+            - name: OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+              value: "true"
+            - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+              value: python
+          resources:
+            requests: { cpu: 20m, memory: 300Mi }
+            limits: { memory: 500Mi }
+          readinessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 60
+            periodSeconds: 20

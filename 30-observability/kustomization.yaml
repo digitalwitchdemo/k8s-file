@@ -1,0 +1,75 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: observability
+
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "3"
+
+resources:
+  - otel-collector.yaml
+  - opamp-server.yaml
+  - jaeger.yaml
+  - prometheus.yaml
+  - grafana.yaml
+
+configMapGenerator:
+  - name: otel-collector-config
+    files:
+      - config/otelcol-config.yml
+
+  - name: jaeger-config
+    files:
+      - config.yml=config/jaeger-config.yml
+      - ui-config.json=config/jaeger-ui-config.json
+
+  # Copy of src/prometheus/prometheus-config.yaml
+  - name: prometheus-config
+    files:
+      - config/prometheus-config.yaml
+
+  - name: grafana-config
+    files:
+      - config/grafana/grafana.ini
+
+  - name: grafana-datasources
+    files:
+      - config/grafana/datasources.yaml
+
+  # Copy of src/grafana/provisioning/dashboards/demo.yaml
+  - name: grafana-dashboards-provider
+    files:
+      - demo.yaml=config/grafana/dashboards-provider.yaml
+
+  # Copies of src/grafana/provisioning/dashboards/demo/*.json, split into
+  # three ConfigMaps (each under the 1 MiB limit). Two are larger than the
+  # 256 KB that client-side "kubectl apply" allows, so always use
+  # server-side apply (Argo CD: ServerSideApply=true; kubectl: --server-side)
+  - name: grafana-dashboards-1
+    files:
+      - config/grafana/dashboards/opentelemetry-collector.json
+  - name: grafana-dashboards-2
+    files:
+      - config/grafana/dashboards/apm-dashboard.json
+      - config/grafana/dashboards/linux-dashboard.json
+      - config/grafana/dashboards/self-observability.json
+  - name: grafana-dashboards-3
+    files:
+      - config/grafana/dashboards/NGINX-metrics.json
+      - config/grafana/dashboards/demo-dashboard.json
+      - config/grafana/dashboards/events-by-name.json
+      - config/grafana/dashboards/exemplars-dashboard.json
+      - config/grafana/dashboards/postgresql-dashboard.json
+      - config/grafana/dashboards/spanmetrics-dashboard.json
+
+  # Copies of src/grafana/provisioning/alerting/*
+  - name: grafana-alerting
+    files:
+      - config/grafana/alerting/cart-service-alerting.yml
+      - config/grafana/alerting/default-email.yaml
+      - config/grafana/alerting/opentelemetry-collector-rules.yaml
+
+# Secrets NOT stored in Git - create them with create-secrets.sh:
+#   collector-secrets  (POSTGRES_MONITORING_PASSWORD)
+#   grafana-admin      (admin-user, admin-password)
+#   basic-auth         (htpasswd for jaeger. and prometheus.)

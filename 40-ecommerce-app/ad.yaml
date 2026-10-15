@@ -1,0 +1,70 @@
+# Ad service (Java) - contextual ads
+apiVersion: v1
+kind: Service
+metadata:
+  name: ad
+  namespace: ecommerce-app
+  labels:
+    app: ad
+spec:
+  selector:
+    app: ad
+  ports:
+    - name: grpc
+      port: 9555
+      targetPort: grpc
+    - name: metrics
+      port: 9465
+      targetPort: metrics
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ad
+  namespace: ecommerce-app
+  labels:
+    app: ad
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ad
+  template:
+    metadata:
+      labels:
+        app: ad
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: ad
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/ad:latest
+          ports:
+            - name: grpc
+              containerPort: 9555
+            - name: metrics
+              containerPort: 9465
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: ad
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=medium"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability:4318
+            - name: OTEL_LOGS_EXPORTER
+              value: otlp
+            - name: OTEL_EXPERIMENTAL_SDK_TELEMETRY_VERSION
+              value: latest
+          resources:
+            requests: { cpu: 20m, memory: 180Mi }
+            limits: { memory: 300Mi }
+          readinessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 60
+            periodSeconds: 20

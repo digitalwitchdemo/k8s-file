@@ -1,0 +1,188 @@
+# Feature flags: flagd (flag server) + flagd-ui (editor at
+# https://shop.digitalwitch.online/feature). Both share one flag file on an
+# EFS volume: flagd-ui writes it, flagd reloads it.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: flagd-data
+  namespace: ecommerce-app
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: efs-sc # EFS StorageClass from the EKS Terraform project
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flagd
+  namespace: ecommerce-app
+  labels:
+    app: flagd
+spec:
+  selector:
+    app: flagd
+  ports:
+    - name: grpc
+      port: 8013
+      targetPort: grpc
+    - name: ofrep
+      port: 8016
+      targetPort: ofrep
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flagd
+  namespace: ecommerce-app
+  labels:
+    app: flagd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flagd
+  template:
+    metadata:
+      labels:
+        app: flagd
+    spec:
+      enableServiceLinks: false
+      initContainers:
+        # Seed the shared volume with the default flags on first start only;
+        # never overwrite changes made in flagd-ui
+        - name: seed-flags
+          image: busybox:1.37
+          command:
+            - sh
+            - -c
+            - |
+              if [ ! -f /data/demo.flagd.json ]; then
+                cp /seed/demo.flagd.json /data/demo.flagd.json
+                echo "seeded default flags"
+              else
+                echo "flag file already present"
+              fi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: seed
+              mountPath: /seed
+              readOnly: true
+      containers:
+        - name: flagd
+          image: ghcr.io/open-feature/flagd:v0.16.0
+          args: ["start", "--uri", "file:/etc/flagd/demo.flagd.json"]
+          ports:
+            - name: grpc
+              containerPort: 8013
+            - name: ofrep
+              containerPort: 8016
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability:4318
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: GOMEMLIMIT
+              value: 60MiB
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=low
+            - name: OTEL_SERVICE_NAME
+              value: flagd
+          resources:
+            requests: { cpu: 20m, memory: 48Mi }
+            limits: { memory: 75Mi }
+          readinessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: /etc/flagd
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: flagd-data
+        - name: seed
+          configMap:
+            name: flagd-default-flags
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flagd-ui
+  namespace: ecommerce-app
+  labels:
+    app: flagd-ui
+spec:
+  selector:
+    app: flagd-ui
+  ports:
+    - name: http
+      port: 4000
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flagd-ui
+  namespace: ecommerce-app
+  labels:
+    app: flagd-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flagd-ui
+  template:
+    metadata:
+      labels:
+        app: flagd-ui
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: flagd-ui
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/flagd-ui:latest
+          ports:
+            - name: http
+              containerPort: 4000
+          env:
+            - name: FLAGD_UI_PORT
+              value: "4000"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability:4318
+            - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+              value: cumulative
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=low
+            - name: OTEL_SERVICE_NAME
+              value: flagd-ui
+            # Public hostname; the UI's live websocket checks the browser origin
+            - name: PHX_HOST
+              value: shop.digitalwitch.online
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef: { name: app-secrets, key: FLAGD_UI_SECRET_KEY_BASE }
+          resources:
+            requests: { cpu: 20m, memory: 128Mi }
+            limits: { memory: 200Mi }
+          readinessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: flagd-data

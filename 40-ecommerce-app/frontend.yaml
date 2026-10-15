@@ -1,0 +1,63 @@
+# Frontend (Next.js) - the web shop
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: ecommerce-app
+  labels:
+    app: frontend
+spec:
+  selector:
+    app: frontend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: ecommerce-app
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: frontend
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/frontend:latest
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: frontend
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=critical"
+            - name: PORT
+              value: "8080"
+            - name: WEB_OTEL_SERVICE_NAME
+              value: frontend-web
+          resources:
+            requests: { cpu: 20m, memory: 150Mi }
+            limits: { memory: 250Mi }
+          readinessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 20

@@ -1,0 +1,46 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ecommerce-app
+
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "4"
+
+resources:
+  - flagd.yaml
+  # Shop services
+  - ad.yaml
+  - cart.yaml
+  - checkout.yaml
+  - currency.yaml
+  - email.yaml
+  - payment.yaml
+  - product-catalog.yaml
+  - quote.yaml
+  - recommendation.yaml
+  - shipping.yaml
+  - accounting.yaml
+  - fraud-detection.yaml
+  - image-provider.yaml
+  - frontend.yaml
+  - frontend-proxy.yaml
+  - telemetry-docs.yaml
+  - load-generator.yaml
+
+configMapGenerator:
+  # Shared ports/addresses for every pod (envFrom)
+  - name: app-env
+    envs:
+      - config/app.env
+  # Copy of ecommerce-final-project's otel-config.yml (product-catalog SDK config)
+  - name: product-catalog-otel-config
+    files:
+      - config/otel-config.yml
+  # Copy of src/flagd/demo.flagd.json - seeds the flag volume on first start
+  - name: flagd-default-flags
+    files:
+      - config/demo.flagd.json
+
+# Secret "app-secrets" is NOT stored in Git - create it with
+# create-secrets.sh. Keys: PRODUCT_CATALOG_DB_CONNECTION_STRING,
+# ACCOUNTING_DB_CONNECTION_STRING, FLAGD_UI_SECRET_KEY_BASE

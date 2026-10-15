@@ -1,0 +1,3 @@
+# Keep Unix line endings: shell scripts and YAML must not get CRLF on Windows
+* text=auto eol=lf
+*.json text eol=lf

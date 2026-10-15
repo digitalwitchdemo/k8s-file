@@ -1,0 +1,61 @@
+# Currency service (C++) - converts prices
+apiVersion: v1
+kind: Service
+metadata:
+  name: currency
+  namespace: ecommerce-app
+  labels:
+    app: currency
+spec:
+  selector:
+    app: currency
+  ports:
+    - name: grpc
+      port: 7001
+      targetPort: grpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currency
+  namespace: ecommerce-app
+  labels:
+    app: currency
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: currency
+  template:
+    metadata:
+      labels:
+        app: currency
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: currency
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/currency:latest
+          ports:
+            - name: grpc
+              containerPort: 7001
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: currency
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=high"
+            - name: VERSION
+              value: 3.0.0
+          resources:
+            requests: { cpu: 20m, memory: 16Mi }
+            limits: { memory: 20Mi }
+          readinessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 60
+            periodSeconds: 20

@@ -1,0 +1,65 @@
+# Astronomy Shop on EKS - everything Argo CD syncs from Git.
+#
+#   00-base            namespaces, gp3 StorageClass, mergeable ClusterIssuer
+#   10-ecommerce-data  PostgreSQL, Valkey, Kafka                 (wave 1)
+#   20-logging         OpenSearch, OpenSearch Dashboards         (wave 2)
+#   30-observability   Collector, OpAMP, Jaeger, Prometheus, Grafana (wave 3)
+#   40-ecommerce-app   flagd, flagd-ui and the 17 shop services  (wave 4)
+#
+# 50-ingress is deliberately NOT listed: apply it by hand once DNS resolves
+# (see 50-ingress/kustomization.yaml). Secrets come from create-secrets.sh.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - 00-base
+  - 10-ecommerce-data
+  - 20-logging
+  - 30-observability
+  - 40-ecommerce-app
+
+# Image tags for every image built by .github/workflows/ecr-build-push.yml.
+# Pin newTag to a commit SHA tag (e.g. "c5f9da36") for repeatable deploys.
+images:
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/accounting
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/ad
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/cart
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/checkout
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/currency
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/email
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/flagd-ui
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/fraud-detection
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/frontend
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/frontend-proxy
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/image-provider
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/kafka
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/load-generator
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/opamp-server
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/opensearch
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/payment
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/product-catalog
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/quote
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/recommendation
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/shipping
+    newTag: latest
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/telemetry-docs
+    newTag: latest

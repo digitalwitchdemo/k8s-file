@@ -1,0 +1,32 @@
+# The four namespaces of the Astronomy Shop deployment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ecommerce-app
+  labels:
+    app.kubernetes.io/part-of: astronomy-shop
+    tier: app
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ecommerce-data
+  labels:
+    app.kubernetes.io/part-of: astronomy-shop
+    tier: data
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+  labels:
+    app.kubernetes.io/part-of: astronomy-shop
+    tier: observability
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: logging
+  labels:
+    app.kubernetes.io/part-of: astronomy-shop
+    tier: logging

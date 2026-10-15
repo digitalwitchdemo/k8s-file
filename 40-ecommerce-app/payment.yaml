@@ -1,0 +1,61 @@
+# Payment service (Node.js) - charges the card
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment
+  namespace: ecommerce-app
+  labels:
+    app: payment
+spec:
+  selector:
+    app: payment
+  ports:
+    - name: grpc
+      port: 50051
+      targetPort: grpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment
+  namespace: ecommerce-app
+  labels:
+    app: payment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment
+  template:
+    metadata:
+      labels:
+        app: payment
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: payment
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/payment:latest
+          ports:
+            - name: grpc
+              containerPort: 50051
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: payment
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=critical"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: grpc
+          resources:
+            requests: { cpu: 20m, memory: 84Mi }
+            limits: { memory: 140Mi }
+          readinessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 60
+            periodSeconds: 20

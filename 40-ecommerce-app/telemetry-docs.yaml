@@ -1,0 +1,59 @@
+# Telemetry documentation site
+apiVersion: v1
+kind: Service
+metadata:
+  name: telemetry-docs
+  namespace: ecommerce-app
+  labels:
+    app: telemetry-docs
+spec:
+  selector:
+    app: telemetry-docs
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telemetry-docs
+  namespace: ecommerce-app
+  labels:
+    app: telemetry-docs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telemetry-docs
+  template:
+    metadata:
+      labels:
+        app: telemetry-docs
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: telemetry-docs
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/telemetry-docs:latest
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: telemetry-docs
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=opentelemetry-demo,service.version=3.0.0"
+          resources:
+            requests: { cpu: 20m, memory: 60Mi }
+            limits: { memory: 100Mi }
+          readinessProbe:
+            httpGet: { path: /, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 20

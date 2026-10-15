@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: logging
+
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "2"
+
+resources:
+  - opensearch.yaml
+  - opensearch-dashboards.yaml
+
+# Secret "basic-auth" (for logs.digitalwitch.online) is NOT stored in Git -
+# create it with create-secrets.sh.

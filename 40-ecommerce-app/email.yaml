@@ -1,0 +1,63 @@
+# Email service (Ruby) - order confirmations
+apiVersion: v1
+kind: Service
+metadata:
+  name: email
+  namespace: ecommerce-app
+  labels:
+    app: email
+spec:
+  selector:
+    app: email
+  ports:
+    - name: http
+      port: 6060
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email
+  namespace: ecommerce-app
+  labels:
+    app: email
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email
+  template:
+    metadata:
+      labels:
+        app: email
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: email
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/email:latest
+          ports:
+            - name: http
+              containerPort: 6060
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: email
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=medium"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability:4318
+            - name: APP_ENV
+              value: production
+          resources:
+            requests: { cpu: 20m, memory: 60Mi }
+            limits: { memory: 100Mi }
+          readinessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 20

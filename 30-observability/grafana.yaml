@@ -1,0 +1,122 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: observability
+  labels:
+    app: grafana
+spec:
+  selector:
+    app: grafana
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-data
+  namespace: observability
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: gp3
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: observability
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  # The gp3 volume can only be attached to one pod at a time
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      enableServiceLinks: false
+      securityContext:
+        fsGroup: 472 # grafana user
+      containers:
+        - name: grafana
+          image: grafana/grafana:13.1.0
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: GF_INSTALL_PLUGINS
+              value: grafana-opensearch-datasource
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef: { name: grafana-admin, key: admin-user }
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: grafana-admin, key: admin-password }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 256Mi }
+          readinessProbe:
+            httpGet: { path: /api/health, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /api/health, port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/grafana
+            - name: config
+              mountPath: /etc/grafana/grafana.ini
+              subPath: grafana.ini
+              readOnly: true
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+              readOnly: true
+            # Mounted as a single file so the dashboards folder below can sit
+            # next to it in /etc/grafana/provisioning/dashboards
+            - name: dashboards-provider
+              mountPath: /etc/grafana/provisioning/dashboards/demo.yaml
+              subPath: demo.yaml
+              readOnly: true
+            - name: dashboards
+              mountPath: /etc/grafana/provisioning/dashboards/demo
+              readOnly: true
+            - name: alerting
+              mountPath: /etc/grafana/provisioning/alerting
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: grafana-data
+        - name: config
+          configMap:
+            name: grafana-config
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboards-provider
+          configMap:
+            name: grafana-dashboards-provider
+        # Dashboards are split over 3 ConfigMaps (each well under the 1 MiB
+        # ConfigMap limit) and merged here. Apply with --server-side.
+        - name: dashboards
+          projected:
+            sources:
+              - configMap: { name: grafana-dashboards-1 }
+              - configMap: { name: grafana-dashboards-2 }
+              - configMap: { name: grafana-dashboards-3 }
+        - name: alerting
+          configMap:
+            name: grafana-alerting

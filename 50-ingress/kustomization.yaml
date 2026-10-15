@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# NOT part of the Argo CD sync (the root kustomization.yaml leaves it out on
+# purpose). Apply MANUALLY only after every DNS record below resolves to the
+# NGINX load balancer, or Let's Encrypt validation fails:
+#   kubectl apply -k 50-ingress
+#
+#   shop.digitalwitch.online        -> ecommerce-app/frontend-proxy
+#   grafana.digitalwitch.online     -> observability/grafana
+#   jaeger.digitalwitch.online      -> observability/jaeger        (basic auth)
+#   prometheus.digitalwitch.online  -> observability/prometheus    (basic auth)
+#   logs.digitalwitch.online        -> logging/opensearch-dashboards (basic auth)
+resources:
+  - shop.yaml
+  - grafana.yaml
+  - jaeger.yaml
+  - prometheus.yaml
+  - logs.yaml

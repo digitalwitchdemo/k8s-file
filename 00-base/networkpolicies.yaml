@@ -1,0 +1,63 @@
+# OPTIONAL network isolation between the tiers.
+# These only take effect when network-policy enforcement is enabled in the
+# Amazon VPC CNI add-on (enableNetworkPolicy: "true"). They are NOT listed in
+# 00-base/kustomization.yaml; add them there once enforcement is on.
+
+# ecommerce-data: only the app tier and the collector may reach the databases
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-app-and-observability
+  namespace: ecommerce-data
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ecommerce-app
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+        - podSelector: {} # same namespace
+---
+# logging: only the collector, Grafana, the ingress controller and the
+# logging tier itself may reach OpenSearch / OpenSearch Dashboards
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-observability-and-ingress
+  namespace: logging
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: nginx-ingress
+        - podSelector: {}
+---
+# ecommerce-app: the ingress controller (shop traffic), the collector
+# (scrapes ad, image-provider, frontend-proxy) and the app tier itself
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-and-observability
+  namespace: ecommerce-app
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: nginx-ingress
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+        - podSelector: {}

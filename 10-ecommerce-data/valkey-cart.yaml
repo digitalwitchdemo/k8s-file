@@ -1,0 +1,70 @@
+# Valkey - cart cache, with append-only persistence so carts survive restarts
+apiVersion: v1
+kind: Service
+metadata:
+  name: valkey-cart
+  namespace: ecommerce-data
+  labels:
+    app: valkey-cart
+spec:
+  selector:
+    app: valkey-cart
+  ports:
+    - name: valkey
+      port: 6379
+      targetPort: valkey
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: valkey-cart
+  namespace: ecommerce-data
+  labels:
+    app: valkey-cart
+spec:
+  serviceName: valkey-cart
+  replicas: 1
+  selector:
+    matchLabels:
+      app: valkey-cart
+  template:
+    metadata:
+      labels:
+        app: valkey-cart
+    spec:
+      enableServiceLinks: false
+      securityContext:
+        runAsUser: 999 # "valkey" user in the alpine image
+        runAsGroup: 999
+        fsGroup: 999
+      containers:
+        - name: valkey
+          image: ghcr.io/valkey-io/valkey:9.0.4-alpine3.23
+          args: ["valkey-server", "--appendonly", "yes", "--dir", "/data"]
+          ports:
+            - name: valkey
+              containerPort: 6379
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { memory: 64Mi }
+          readinessProbe:
+            exec:
+              command: ["valkey-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: valkey }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: gp3
+        resources:
+          requests:
+            storage: 1Gi

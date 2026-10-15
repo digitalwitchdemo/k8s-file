@@ -1,0 +1,46 @@
+# https://logs.digitalwitch.online -> opensearch-dashboards (protected by NGINX basic auth, Secret "basic-auth")
+#
+# F5 NGINX mergeable Ingresses:
+#   master = host + TLS certificate (issuer letsencrypt-prod-mergeable)
+#   minion = the "/" path + basic auth
+# cert-manager's ACME challenge Ingress joins as another minion WITHOUT basic
+# auth, so Let's Encrypt can validate the domain.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: logs-master
+  namespace: logging
+  annotations:
+    nginx.org/mergeable-ingress-type: master
+    cert-manager.io/cluster-issuer: letsencrypt-prod-mergeable
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - logs.digitalwitch.online
+      secretName: logs-tls
+  rules:
+    - host: logs.digitalwitch.online
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: logs-ui
+  namespace: logging
+  annotations:
+    nginx.org/mergeable-ingress-type: minion
+    nginx.org/basic-auth-secret: basic-auth
+    nginx.org/basic-auth-realm: "Logs"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: logs.digitalwitch.online
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: opensearch-dashboards
+                port:
+                  name: http

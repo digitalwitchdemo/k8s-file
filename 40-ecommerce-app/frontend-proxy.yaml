@@ -1,0 +1,64 @@
+# Frontend proxy (Envoy) - entry point for shop.digitalwitch.online
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-proxy
+  namespace: ecommerce-app
+  labels:
+    app: frontend-proxy
+spec:
+  selector:
+    app: frontend-proxy
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: admin
+      port: 10000
+      targetPort: admin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-proxy
+  namespace: ecommerce-app
+  labels:
+    app: frontend-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-proxy
+  template:
+    metadata:
+      labels:
+        app: frontend-proxy
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: frontend-proxy
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/frontend-proxy:latest
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: admin
+              containerPort: 10000
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: frontend-proxy
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=critical"
+          resources:
+            requests: { cpu: 20m, memory: 77Mi }
+            limits: { memory: 128Mi }
+          readinessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 20

@@ -1,0 +1,65 @@
+# Cart service (.NET) - stores carts in Valkey
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart
+  namespace: ecommerce-app
+  labels:
+    app: cart
+spec:
+  selector:
+    app: cart
+  ports:
+    - name: grpc
+      port: 7070
+      targetPort: grpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+  namespace: ecommerce-app
+  labels:
+    app: cart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cart
+  template:
+    metadata:
+      labels:
+        app: cart
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: cart
+          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/cart:latest
+          ports:
+            - name: grpc
+              containerPort: 7070
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: cart
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=high"
+            - name: ASPNETCORE_URLS
+              value: "http://*:7070"
+            - name: OPAMP_SERVER_ENDPOINT
+              value: wss://opamp-server.observability:4320/v1/opamp
+            - name: OPAMP_SERVER_TLS_INSECURE_SKIP_VERIFY
+              value: "true"
+          resources:
+            requests: { cpu: 20m, memory: 96Mi }
+            limits: { memory: 160Mi }
+          readinessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: grpc }
+            initialDelaySeconds: 60
+            periodSeconds: 20

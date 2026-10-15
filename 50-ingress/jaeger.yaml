@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jaeger-master
+  namespace: observability
+  annotations:
+    nginx.org/mergeable-ingress-type: master
+    cert-manager.io/cluster-issuer: letsencrypt-prod-mergeable
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - jaeger.digitalwitch.online
+      secretName: jaeger-tls
+  rules:
+    - host: jaeger.digitalwitch.online
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jaeger-ui
+  namespace: observability
+  annotations:
+    nginx.org/mergeable-ingress-type: minion
+    nginx.org/basic-auth-secret: basic-auth
+    nginx.org/basic-auth-realm: "Jaeger"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: jaeger.digitalwitch.online
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jaeger
+                port:
+                  name: ui
