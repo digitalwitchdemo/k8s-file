@@ -1,0 +1,25 @@
+# HTTPS Ingresses. MANUAL sync: click SYNC in Argo CD only after the DNS records resolve
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: astronomy-ingress
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5" # created after the apps with a lower number are Healthy
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/digitalwitchdemo/k8s-file.git
+    targetRevision: main
+    path: 50-ingress
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

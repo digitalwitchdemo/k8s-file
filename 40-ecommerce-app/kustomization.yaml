@@ -32,25 +32,61 @@ resources:
   - mcp.yaml
 
 configMapGenerator:
-  # Shared ports/addresses for every pod (envFrom)
   - name: app-env
     envs:
       - config/app.env
-  # Copy of ecommerce-final-project's otel-config.yml (product-catalog SDK config)
   - name: product-catalog-otel-config
     files:
       - config/otel-config.yml
-  # Copy of src/flagd/demo.flagd.json - seeds the flag volume on first start
   - name: flagd-default-flags
     files:
       - config/demo.flagd.json
-  # Copies of ecommerce-final-project src/agent/fixtures/vcr_cassettes:
-  # recorded LLM answers the agent replays (no AI API key needed)
   - name: agent-vcr-cassettes
     files:
       - config/vcr_cassettes/azure_gpt-5.5_cassette.yaml
       - config/vcr_cassettes/claude-opus-4-7_cassette.yaml
 
-# Secret "app-secrets" is NOT stored in Git - create it with
-# create-secrets.sh. Keys: PRODUCT_CATALOG_DB_CONNECTION_STRING,
-# ACCOUNTING_DB_CONNECTION_STRING, FLAGD_UI_SECRET_KEY_BASE
+# Image tags - updated automatically by the ecommerce-final-project pipeline
+images:
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/accounting
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/ad
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/agent
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/cart
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/chatbot
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/checkout
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/currency
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/email
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/flagd-ui
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/fraud-detection
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/frontend
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/frontend-proxy
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/image-provider
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/load-generator
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/mcp
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/payment
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/product-catalog
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/quote
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/recommendation
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/shipping
+    newTag: "9"
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/telemetry-docs
+    newTag: "9"

@@ -1,0 +1,23 @@
+# "App of apps": the only Application you create by hand.
+#   kubectl apply -f argocd/root-app.yaml
+# It creates one Argo CD app per layer from argocd/apps/, in order:
+#   astronomy-base (-1) -> data (1) -> logging (2) -> observability (3)
+#   -> app (4) -> ingress (5, manual sync after DNS)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: astronomy-shop
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/digitalwitchdemo/k8s-file.git
+    targetRevision: main
+    path: argocd/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

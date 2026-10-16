@@ -12,3 +12,8 @@ resources:
 
 # Secret "basic-auth" (for logs.digitalwitch.online) is NOT stored in Git -
 # create it with create-secrets.sh.
+
+# Image tags - updated automatically by the ecommerce-final-project pipeline
+images:
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/opensearch
+    newTag: "9"

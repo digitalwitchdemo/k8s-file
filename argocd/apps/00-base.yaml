@@ -1,20 +1,17 @@
-# Argo CD Application: keeps the cluster in sync with this folder in Git.
-# Apply once:  kubectl apply -f argocd/ecommerce-app.yaml
-#
-# The repository is private, so first give Argo CD read access
-# (Argo CD UI -> Settings -> Repositories -> Connect repo, using a GitHub
-# fine-grained token with read-only "Contents" permission).
+# Namespaces, gp3 StorageClass, ClusterIssuer
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: astronomy-shop
+  name: astronomy-base
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1" # created after the apps with a lower number are Healthy
 spec:
   project: default
   source:
     repoURL: https://github.com/digitalwitchdemo/k8s-file.git
     targetRevision: main
-    path: .
+    path: 00-base
   destination:
     server: https://kubernetes.default.svc
   syncPolicy:
@@ -22,7 +19,6 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      # Large Grafana dashboard ConfigMaps exceed the client-side apply limit
       - ServerSideApply=true
     retry:
       limit: 5

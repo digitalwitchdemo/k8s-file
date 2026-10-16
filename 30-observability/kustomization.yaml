@@ -73,3 +73,8 @@ configMapGenerator:
 #   collector-secrets  (POSTGRES_MONITORING_PASSWORD)
 #   grafana-admin      (admin-user, admin-password)
 #   basic-auth         (htpasswd for jaeger. and prometheus.)
+
+# Image tags - updated automatically by the ecommerce-final-project pipeline
+images:
+  - name: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/opamp-server
+    newTag: "9"

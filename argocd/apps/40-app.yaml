@@ -1,0 +1,28 @@
+# ecommerce-app: shop services, flagd, AI assistant
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: astronomy-app
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4" # created after the apps with a lower number are Healthy
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/digitalwitchdemo/k8s-file.git
+    targetRevision: main
+    path: 40-ecommerce-app
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

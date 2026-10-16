@@ -6,15 +6,16 @@ Argo CD with Kustomize.
 
 ## Layout
 
-| Folder | Namespace | Contents | Argo CD wave |
+| Folder | Namespace | Contents | Argo CD app (wave) |
 |---|---|---|---|
-| `00-base/` | cluster-wide | 4 namespaces, `gp3` StorageClass, `letsencrypt-prod-mergeable` ClusterIssuer, optional NetworkPolicies | -1 |
-| `10-ecommerce-data/` | `ecommerce-data` | PostgreSQL, Valkey, Kafka (StatefulSets on gp3) | 1 |
-| `20-logging/` | `logging` | OpenSearch, OpenSearch Dashboards | 2 |
-| `30-observability/` | `observability` | OTel Collector, OpAMP, Jaeger, Prometheus, Grafana | 3 |
-| `40-ecommerce-app/` | `ecommerce-app` | flagd, flagd-ui, 17 shop services, AI assistant (chatbot, agent, mcp) | 4 |
-| `50-ingress/` | per service | 5 HTTPS Ingresses - **applied by hand after DNS** | — |
-| `argocd/` | `argocd` | The Argo CD `Application` | — |
+| `00-base/` | cluster-wide | 4 namespaces, `gp3` StorageClass, `letsencrypt-prod-mergeable` ClusterIssuer, optional NetworkPolicies | `astronomy-base` (-1) |
+| `10-ecommerce-data/` | `ecommerce-data` | PostgreSQL, Valkey, Kafka (StatefulSets on gp3) | `astronomy-data` (1) |
+| `20-logging/` | `logging` | OpenSearch, OpenSearch Dashboards | `astronomy-logging` (2) |
+| `30-observability/` | `observability` | OTel Collector, OpAMP, Jaeger, Prometheus, Grafana | `astronomy-observability` (3) |
+| `40-ecommerce-app/` | `ecommerce-app` | flagd, flagd-ui, 17 shop services, AI assistant (chatbot, agent, mcp) | `astronomy-app` (4) |
+| `50-ingress/` | per service | 5 HTTPS Ingresses | `astronomy-ingress` (5), **manual sync after DNS** |
+| `argocd/root-app.yaml` | `argocd` | Parent app `astronomy-shop`: creates the 6 apps above | — |
+| `argocd/apps/` | `argocd` | The 6 child Applications, one per folder | — |
 | `create-secrets.sh` | all | Creates every Secret (never stored in Git) | — |
 
 ## Public URLs
@@ -42,20 +43,23 @@ bash create-secrets.sh
 
 # 2. Give Argo CD read access to this private repo (UI -> Settings -> Repositories)
 
-# 3. Deploy everything except the Ingresses
-kubectl apply -f argocd/ecommerce-app.yaml
+# 3. Create the parent app; it creates the 6 layer apps in wave order,
+#    waiting for each to be Healthy before the next
+kubectl apply -f argocd/root-app.yaml
 #    (without Argo CD: kubectl apply --server-side -k .)
 
 # 4. DNS: CNAME shop, grafana, jaeger, prometheus, logs -> NGINX load balancer
 #    (terraform output load_balancer_hostname in the EKS project)
 
-# 5. After every name resolves:
-kubectl apply -k 50-ingress
+# 5. After every name resolves: Argo CD UI -> astronomy-ingress -> SYNC
 kubectl get certificate -A
 ```
 
-Always use **server-side apply** (`--server-side`): two Grafana dashboard
-ConfigMaps are larger than the 256 KB client-side apply allows.
+Image tags live in each layer's `kustomization.yaml` (`images:`); the
+ecommerce-final-project pipeline updates them after every build.
+
+Always use **server-side apply** (`--server-side`; the Argo CD apps already do):
+two Grafana dashboard ConfigMaps are larger than the 256 KB client-side apply allows.
 
 ## Updating config copied from ecommerce-final-project
 
