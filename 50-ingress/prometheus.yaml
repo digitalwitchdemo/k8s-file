@@ -12,6 +12,11 @@ metadata:
   namespace: observability
   annotations:
     nginx.org/mergeable-ingress-type: master
+    # No HTTP->HTTPS redirect: otherwise Let's Encrypt's HTTP check is redirected
+    # to HTTPS before the certificate exists, and the first issue never succeeds.
+    nginx.org/ssl-redirect: "false"
+    # HSTS: after the first HTTPS visit, browsers always use HTTPS for this host
+    nginx.org/hsts: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod-mergeable
 spec:
   ingressClassName: nginx
