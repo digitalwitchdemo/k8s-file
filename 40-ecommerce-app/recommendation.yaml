@@ -34,7 +34,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: recommendation
-          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/recommendation:latest
+          image: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/recommendation:latest
           ports:
             - name: grpc
               containerPort: 9001

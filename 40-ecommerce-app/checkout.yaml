@@ -34,7 +34,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: checkout
-          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/checkout:latest
+          image: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/checkout:latest
           ports:
             - name: grpc
               containerPort: 5050

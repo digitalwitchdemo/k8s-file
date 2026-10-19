@@ -34,7 +34,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: product-catalog
-          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/product-catalog:latest
+          image: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/product-catalog:latest
           ports:
             - name: grpc
               containerPort: 3550

@@ -36,7 +36,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: chatbot
-          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/chatbot:latest
+          image: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/chatbot:latest
           ports:
             - name: http
               containerPort: 7860

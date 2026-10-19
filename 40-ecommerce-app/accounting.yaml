@@ -19,7 +19,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: accounting
-          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/accounting:latest
+          image: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/accounting:latest
           envFrom:
             - configMapRef:
                 name: app-env

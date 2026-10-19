@@ -38,7 +38,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: opamp-server
-          image: 060647991200.dkr.ecr.us-west-1.amazonaws.com/ecomerce/opamp-server:latest
+          image: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/opamp-server:latest
           ports:
             - name: opamp
               containerPort: 4320
