@@ -11,6 +11,10 @@ metadata:
     # F5 NGINX rejects a second Ingress for the same host, so cert-manager
     # adds the ACME challenge path to this Ingress instead of creating its own
     acme.cert-manager.io/http01-edit-in-place: "true"
+    # No HTTP->HTTPS redirect, so Let's Encrypt's HTTP check works before the
+    # certificate exists; HSTS makes browsers use HTTPS after the first visit
+    nginx.org/ssl-redirect: "false"
+    nginx.org/hsts: "true"
 spec:
   ingressClassName: nginx
   tls:

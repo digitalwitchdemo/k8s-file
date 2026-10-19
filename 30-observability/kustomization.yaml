@@ -12,6 +12,10 @@ resources:
   - jaeger.yaml
   - prometheus.yaml
   - grafana.yaml
+  # Public URLs (https://<name>.digitalwitch.online)
+  - ingress-grafana.yaml
+  - ingress-jaeger.yaml # basic auth
+  - ingress-prometheus.yaml # basic auth
 
 configMapGenerator:
   - name: otel-collector-config

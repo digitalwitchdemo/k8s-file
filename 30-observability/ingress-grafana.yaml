@@ -7,6 +7,10 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     acme.cert-manager.io/http01-edit-in-place: "true"
+    # No HTTP->HTTPS redirect, so Let's Encrypt's HTTP check works before the
+    # certificate exists; HSTS makes browsers use HTTPS after the first visit
+    nginx.org/ssl-redirect: "false"
+    nginx.org/hsts: "true"
 spec:
   ingressClassName: nginx
   tls:

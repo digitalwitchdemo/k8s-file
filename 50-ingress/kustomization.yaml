@@ -7,11 +7,5 @@ kind: Kustomization
 #   kubectl apply -k 50-ingress
 #
 #   shop.digitalwitch.online        -> ecommerce-app/frontend-proxy
-#   grafana.digitalwitch.online     -> observability/grafana
-#   jaeger.digitalwitch.online      -> observability/jaeger        (basic auth)
-#   prometheus.digitalwitch.online  -> observability/prometheus    (basic auth)
 resources:
   - shop.yaml
-  - grafana.yaml
-  - jaeger.yaml
-  - prometheus.yaml
