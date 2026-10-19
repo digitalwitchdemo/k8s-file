@@ -9,6 +9,7 @@ commonAnnotations:
 resources:
   - opensearch.yaml
   - opensearch-dashboards.yaml
+  - ingress-logs.yaml # https://logs.digitalwitch.online (basic auth)
 
 # Secret "basic-auth" (for logs.digitalwitch.online) is NOT stored in Git -
 # create it with create-secrets.sh.
