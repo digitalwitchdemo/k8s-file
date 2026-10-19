@@ -55,7 +55,7 @@ images:
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/email
     newTag: "10"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/flagd-ui
-    newTag: "10"
+    newTag: "11"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/fraud-detection
     newTag: "10"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/frontend
