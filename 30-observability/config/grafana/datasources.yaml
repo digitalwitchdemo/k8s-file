@@ -44,7 +44,10 @@ datasources:
     editable: true
     isDefault: false
     jsonData:
-      database: otel-logs-*
+      # One index per day (otel-logs-2026-10-19); the daily pattern lets the
+      # health check and searches open exactly the days needed
+      database: "[otel-logs-]YYYY-MM-DD"
+      interval: Daily
       flavor: opensearch
       logLevelField: severity.text.keyword
       logMessageField: body
