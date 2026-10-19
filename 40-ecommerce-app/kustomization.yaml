@@ -59,11 +59,11 @@ images:
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/fraud-detection
     newTag: "10"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/frontend
-    newTag: "10"
+    newTag: "15"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/frontend-proxy
     newTag: "10"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/image-provider
-    newTag: "10"
+    newTag: "15"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/load-generator
     newTag: "10"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/payment
