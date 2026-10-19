@@ -6,6 +6,9 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "2" # created after the apps with a lower number are Healthy
+    # Compare using the live server's defaults, so StatefulSet fields Kubernetes
+    # fills in (volumeClaimTemplates apiVersion/kind/status) don't show as OutOfSync
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
   project: default
   source:
