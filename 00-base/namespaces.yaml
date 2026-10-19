@@ -30,3 +30,11 @@ metadata:
   labels:
     app.kubernetes.io/part-of: astronomy-shop
     tier: logging
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-assistant
+  labels:
+    app.kubernetes.io/part-of: astronomy-shop
+    tier: ai

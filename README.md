@@ -8,14 +8,14 @@ Argo CD with Kustomize.
 
 | Folder | Namespace | Contents | Argo CD app (wave) |
 |---|---|---|---|
-| `00-base/` | cluster-wide | 4 namespaces, `gp3` StorageClass, `letsencrypt-prod-mergeable` ClusterIssuer, optional NetworkPolicies | `astronomy-base` (-1) |
+| `00-base/` | cluster-wide | 5 namespaces, `gp3` StorageClass, `letsencrypt-prod-mergeable` ClusterIssuer, optional NetworkPolicies | `astronomy-base` (-1) |
 | `10-ecommerce-data/` | `ecommerce-data` | PostgreSQL, Valkey, Kafka (StatefulSets on gp3) | `astronomy-data` (1) |
-| `20-logging/` | `logging` | OpenSearch, OpenSearch Dashboards | `astronomy-logging` (2) |
-| `30-observability/` | `observability` | OTel Collector, OpAMP, Jaeger, Prometheus, Grafana | `astronomy-observability` (3) |
-| `40-ecommerce-app/` | `ecommerce-app` | flagd, flagd-ui, 17 shop services, AI assistant (chatbot, agent, mcp) | `astronomy-app` (4) |
-| `50-ingress/` | per service | 5 HTTPS Ingresses | `astronomy-ingress` (5), **manual sync after DNS** |
-| `argocd/root-app.yaml` | `argocd` | Parent app `astronomy-shop`: creates the 6 apps above | — |
-| `argocd/apps/` | `argocd` | The 6 child Applications, one per folder | — |
+| `20-logging/` | `logging` | OpenSearch, OpenSearch Dashboards, Ingress `logs.` (basic auth) | `astronomy-logging` (2) |
+| `30-observability/` | `observability` | OTel Collector, OpAMP, Jaeger, Prometheus, Grafana, Ingresses `grafana.`, `jaeger.`, `prometheus.` | `astronomy-observability` (3) |
+| `40-ecommerce-app/` | `ecommerce-app` | flagd, flagd-ui, 17 shop services, Ingress `shop.` | `astronomy-app` (4) |
+| `50-ai-assistant/` | `ai-assistant` | chatbot, agent, mcp (chat at `shop.../chatbot/`) | `astronomy-ai` (5) |
+| `argocd/root-app.yaml` | `argocd` | Parent app `astronomy-shop`: creates the 6 layer apps | — |
+| `argocd/apps/` | `argocd` | One Argo CD Application per folder | — |
 | `create-secrets.sh` | all | Creates every Secret (never stored in Git) | — |
 
 ## Public URLs
@@ -51,7 +51,7 @@ kubectl apply -f argocd/root-app.yaml
 # 4. DNS: CNAME shop, grafana, jaeger, prometheus, logs -> NGINX load balancer
 #    (terraform output load_balancer_hostname in the EKS project)
 
-# 5. After every name resolves: Argo CD UI -> astronomy-ingress -> SYNC
+# 5. Each layer brings its own Ingress; certificates are issued once DNS resolves
 kubectl get certificate -A
 ```
 

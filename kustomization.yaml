@@ -7,3 +7,4 @@ resources:
   - 20-logging
   - 30-observability
   - 40-ecommerce-app
+  - 50-ai-assistant

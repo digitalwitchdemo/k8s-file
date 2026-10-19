@@ -1,8 +1,8 @@
-# HTTPS Ingresses. MANUAL sync: click SYNC in Argo CD only after the DNS records resolve
+# ai-assistant: chatbot, agent, mcp (needs the shop layer for its API)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: astronomy-ingress
+  name: astronomy-ai
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "5" # created after the apps with a lower number are Healthy
@@ -14,10 +14,13 @@ spec:
   source:
     repoURL: https://github.com/digitalwitchdemo/k8s-file.git
     targetRevision: main
-    path: 50-ingress
+    path: 50-ai-assistant
   destination:
     server: https://kubernetes.default.svc
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - ServerSideApply=true
     retry:

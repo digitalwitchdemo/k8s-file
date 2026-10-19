@@ -2,12 +2,12 @@
 # the shop's tools (product catalog, cart...).
 # By default it REPLAYS recorded LLM answers (USE_VCR=True), so no AI API key
 # is needed. For a real LLM: set USE_VCR=False, LLM_BASE_URL and LLM_MODEL, and
-# add key LLM_API_KEY to Secret app-secrets.
+# add key LLM_API_KEY to Secret ai-secrets (namespace ai-assistant).
 apiVersion: v1
 kind: Service
 metadata:
   name: agent
-  namespace: ecommerce-app
+  namespace: ai-assistant
   labels:
     app: agent
 spec:
@@ -22,7 +22,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agent
-  namespace: ecommerce-app
+  namespace: ai-assistant
   labels:
     app: agent
 spec:
@@ -56,7 +56,7 @@ spec:
               containerPort: 8010
           envFrom:
             - configMapRef:
-                name: app-env
+                name: ai-env
           env:
             - name: OTEL_SERVICE_NAME
               value: agent
@@ -84,10 +84,10 @@ spec:
             # Only needed for a real LLM; optional, so the pod starts without it
             - name: API_KEY
               valueFrom:
-                secretKeyRef: { name: app-secrets, key: LLM_API_KEY, optional: true }
+                secretKeyRef: { name: ai-secrets, key: LLM_API_KEY, optional: true }
             - name: OPENAI_API_KEY
               valueFrom:
-                secretKeyRef: { name: app-secrets, key: LLM_API_KEY, optional: true }
+                secretKeyRef: { name: ai-secrets, key: LLM_API_KEY, optional: true }
           resources:
             requests: { cpu: 50m, memory: 300Mi }
             limits: { memory: 500Mi }

@@ -26,10 +26,8 @@ resources:
   - frontend-proxy.yaml
   - telemetry-docs.yaml
   - load-generator.yaml
-  # AI assistant
-  - chatbot.yaml
-  - agent.yaml
-  - mcp.yaml
+  # Public URL: https://shop.digitalwitch.online
+  - ingress-shop.yaml
 
 configMapGenerator:
   - name: app-env
@@ -41,10 +39,6 @@ configMapGenerator:
   - name: flagd-default-flags
     files:
       - config/demo.flagd.json
-  - name: agent-vcr-cassettes
-    files:
-      - config/vcr_cassettes/azure_gpt-5.5_cassette.yaml
-      - config/vcr_cassettes/claude-opus-4-7_cassette.yaml
 
 # Image tags - updated automatically by the ecommerce-final-project pipeline
 images:
@@ -52,11 +46,7 @@ images:
     newTag: "10"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/ad
     newTag: "10"
-  - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/agent
-    newTag: "10"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/cart
-    newTag: "10"
-  - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/chatbot
     newTag: "10"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/checkout
     newTag: "10"
@@ -75,8 +65,6 @@ images:
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/image-provider
     newTag: "10"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/load-generator
-    newTag: "10"
-  - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/mcp
     newTag: "10"
   - name: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/payment
     newTag: "10"

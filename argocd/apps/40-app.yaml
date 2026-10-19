@@ -1,4 +1,4 @@
-# ecommerce-app: shop services, flagd, AI assistant
+# ecommerce-app: shop services, flagd, and the shop Ingress (https://shop.digitalwitch.online)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

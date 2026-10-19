@@ -1,55 +1,62 @@
-# AI assistant - MCP server (Python): exposes the shop's tools (products,
-# cart...) to the agent over the Model Context Protocol.
+# AI assistant - chatbot (Python): the chat UI at
+# https://shop.digitalwitch.online/chatbot/ (routed by frontend-proxy).
+# Sends each question to the agent.
 apiVersion: v1
 kind: Service
 metadata:
-  name: mcp
-  namespace: ecommerce-app
+  name: chatbot
+  namespace: ai-assistant
   labels:
-    app: mcp
+    app: chatbot
 spec:
   selector:
-    app: mcp
+    app: chatbot
   ports:
     - name: http
-      port: 8011
+      port: 7860
       targetPort: http
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mcp
-  namespace: ecommerce-app
+  name: chatbot
+  namespace: ai-assistant
   labels:
-    app: mcp
+    app: chatbot
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mcp
+      app: chatbot
   template:
     metadata:
       labels:
-        app: mcp
+        app: chatbot
     spec:
       enableServiceLinks: false
       containers:
-        - name: mcp
-          image: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/mcp:latest
+        - name: chatbot
+          image: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/chatbot:latest
           ports:
             - name: http
-              containerPort: 8011
+              containerPort: 7860
           envFrom:
             - configMapRef:
-                name: app-env
+                name: ai-env
           env:
             - name: OTEL_SERVICE_NAME
-              value: mcp
+              value: chatbot
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: "service.namespace=opentelemetry-demo,service.version=3.0.0,service.criticality=low"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability:4318
             - name: OTEL_EXPORTER_OTLP_INSECURE
               value: "true"
             - name: OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+              value: "true"
+            - name: OPAMP_SERVER_ENDPOINT
+              value: https://opamp-server.observability:4320/v1/opamp
+            - name: OPAMP_SERVER_TLS_INSECURE_SKIP_VERIFY
               value: "true"
           resources:
             requests: { cpu: 50m, memory: 300Mi }

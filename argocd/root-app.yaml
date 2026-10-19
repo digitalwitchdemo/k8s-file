@@ -2,7 +2,7 @@
 #   kubectl apply -f argocd/root-app.yaml
 # It creates one Argo CD app per layer from argocd/apps/, in order:
 #   astronomy-base (-1) -> data (1) -> logging (2) -> observability (3)
-#   -> app (4) -> ingress (5, manual sync after DNS)
+#   -> app (4) -> ai (5). Each layer includes its own Ingress.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
