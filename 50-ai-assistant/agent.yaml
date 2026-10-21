@@ -50,7 +50,7 @@ spec:
               mountPath: /cassettes
       containers:
         - name: agent
-          image: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/agent:latest
+          image: 060647991200.dkr.ecr.us-east-2.amazonaws.com/ecomerce/agent:16
           ports:
             - name: http
               containerPort: 8010
