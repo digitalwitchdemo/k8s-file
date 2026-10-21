@@ -67,14 +67,14 @@ spec:
             - name: OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
               value: "true"
             - name: USE_VCR
-              value: "True"
+              value: "False"
             - name: VCR_MATCH_THRESHOLD
               value: "0.85"
             # Picks the recording file: azure/gpt-5.5 -> azure_gpt-5.5_cassette.yaml
             - name: LLM_MODEL
-              value: azure/gpt-5.5
+              value: gemini-flash-latest
             - name: LLM_BASE_URL
-              value: https://local-llm.com
+              value: https://generativelanguage.googleapis.com/v1beta/openai/
             - name: LLM_TLS_VERIFY
               value: "True"
             - name: MCP_ENABLED
