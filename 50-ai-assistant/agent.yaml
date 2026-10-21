@@ -1,8 +1,9 @@
 # AI assistant - agent (Python): answers shoppers' questions using an LLM and
 # the shop's tools (product catalog, cart...).
 # By default it REPLAYS recorded LLM answers (USE_VCR=True), so no AI API key
-# is needed. For a real LLM: set USE_VCR=False, LLM_BASE_URL and LLM_MODEL, and
-# add key LLM_API_KEY to Secret ai-secrets (namespace ai-assistant).
+# is needed. For the real LLM (Claude): set USE_VCR=False and LLM_MODEL, and
+# put your Claude API key in key LLM_API_KEY of Secret ai-secrets
+# (namespace ai-assistant).
 apiVersion: v1
 kind: Service
 metadata:
@@ -83,9 +84,13 @@ spec:
             - name: API_KEY
               valueFrom:
                 secretKeyRef: { name: ai-secrets, key: LLM_API_KEY, optional: true }
-            - name: OPENAI_API_KEY
+            - name: ANTHROPIC_API_KEY
               valueFrom:
                 secretKeyRef: { name: ai-secrets, key: LLM_API_KEY, optional: true }
+            # Only needed when the API key is not scoped to a workspace
+            - name: ANTHROPIC_WORKSPACE_ID
+              valueFrom:
+                secretKeyRef: { name: ai-secrets, key: ANTHROPIC_WORKSPACE_ID, optional: true }
           resources:
             requests: { cpu: 50m, memory: 300Mi }
             limits: { memory: 500Mi }
