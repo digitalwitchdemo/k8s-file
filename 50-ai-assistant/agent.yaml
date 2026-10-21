@@ -74,7 +74,7 @@ spec:
             - name: LLM_MODEL
               value: claude-opus-5-5 # or claude-haiku-5-5 (much cheaper)
             - name: ANTHROPIC_BASE_URL
-              value: https://api.anthropic.com
+              value: https://api.ai.kodekloud.com # https://api.anthropic.co
             - name: LLM_TLS_VERIFY
               value: "True"
             - name: MCP_ENABLED
