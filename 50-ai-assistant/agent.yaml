@@ -70,18 +70,16 @@ spec:
               value: "False"
             - name: VCR_MATCH_THRESHOLD
               value: "0.85"
-            # Picks the recording file: azure/gpt-5.5 -> azure_gpt-5.5_cassette.yaml
             - name: LLM_MODEL
-              value: gemini-flash-latest
-            - name: LLM_BASE_URL
-              value: https://generativelanguage.googleapis.com/v1beta/openai/
+              value: claude-opus-5-5 # or claude-haiku-5-5 (much cheaper)
+            - name: ANTHROPIC_BASE_URL
+              value: https://api.anthropic.com
             - name: LLM_TLS_VERIFY
               value: "True"
             - name: MCP_ENABLED
               value: "False"
             - name: GRAPH_RECURSION_LIMIT
               value: "25"
-            # Only needed for a real LLM; optional, so the pod starts without it
             - name: API_KEY
               valueFrom:
                 secretKeyRef: { name: ai-secrets, key: LLM_API_KEY, optional: true }
